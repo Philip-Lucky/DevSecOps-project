@@ -26,7 +26,7 @@ A complete Secure CI/CD pipeline built on AWS EC2 that integrates security at ev
 
 ##  Setup Instructions
 
-### 1. Start the Vault Server
+ Start the Vault Server
 ```bash
 vault server -dev -dev-root-token-id="root" &
 export VAULT_ADDR='http://127.0.0.1:8200'
@@ -50,5 +50,5 @@ Vault: Ensure no sensitive passwords or API keys are hardcoded in the source cod
 
 
 
-AUTHOR: PHILIP LUCKY
+##  AUTHOR: PHILIP LUCKY
 EMAIL: philipslucky24@gmail.com
