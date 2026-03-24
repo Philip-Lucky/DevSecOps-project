@@ -42,7 +42,7 @@ pipeline {
             steps {
                 sh '''
                 # 1. Fetch the secret from Vault
-                DB_PASSWORD=$(vault kv get -field=password secret/devsecops-app)
+                DB_PASSWORD=$(vault kv get -field=password secret/data/devsecops-app)
                 
                 # 2. Stop and remove old container if it exists
                 docker rm -f devsecops-app || true
