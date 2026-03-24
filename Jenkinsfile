@@ -2,19 +2,16 @@ pipeline {
     agent any
 
     environment {
-        // Points to your Vault instance
         VAULT_ADDR = "http://127.0.0.1:8200"
         VAULT_TOKEN = "root"
         IMAGE_NAME = "devsecops-app"
+        // It is safer to put the token in a variable
+        SNYK_TOKEN = "snyk_uat.1fcad39e.eyJlIjoxNzc0OTQ3NzEwLCJoIjoic255ay5pbyIsImoiOiJBWjBmRktzdEFHWUE2MmNjN0hqeWlnIiwicyI6ImU3MUlXYmR6VGdhdkF3clNUWENBQlEiLCJ0aWQiOiJBQUFBQUFBQUFBQUFBQUFBQUFBQUFBIn0.q3lKoNxSJFJgAALsAgNaVQ6Qut-iJt7-UxcZlFzrBmR40DE11B-dRI86QJr4eZLYQX5NnI8cSGXf4R9YbBcQCQ"
     }
 
     stages {
-        stage('Clone Code') {
-            steps {
-                // Replace with your actual repository URL
-                git branch: 'main', url: 'https://github.com/Philip-Lucky/DevSecOps-project'
-            }
-        }
+        // I removed the "Clone Code" stage because Jenkins does this automatically
+        // when you use "Pipeline script from SCM"
 
         stage('Install Dependencies') {
             steps {
@@ -24,9 +21,8 @@ pipeline {
 
         stage('Snyk Security Scan') {
             steps {
-                // Using '|| true' allows the pipeline to continue if vulnerabilities are found
-                // Remove '|| true' if you want the build to FAIL on security issues
-                sh 'snyk test --severity-threshold=high || true'
+                // Using the variable we defined in environment
+                sh "SNYK_TOKEN=${SNYK_TOKEN} snyk test --severity-threshold=high || true"
             }
         }
 
@@ -38,7 +34,6 @@ pipeline {
 
         stage('Trivy Container Scan') {
             steps {
-                // Scans the image we just built
                 sh "trivy image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE_NAME}"
             }
         }
@@ -48,31 +43,14 @@ pipeline {
                 sh '''
                 # 1. Fetch the secret from Vault
                 DB_PASSWORD=$(vault kv get -field=password secret/devsecops-app)
-
-                # 2. Stop and remove the old container if it exists (prevents port conflicts)
-                docker rm -f ${IMAGE_NAME} || true
-
-                # 3. Run the new container, passing the secret as an environment variable
-                docker run -d \
-                  --name ${IMAGE_NAME} \
-                  -p 3000:3000 \
-                  -e APP_DB_PASSWORD=$DB_PASSWORD \
-                  ${IMAGE_NAME}
+                
+                # 2. Stop and remove old container if it exists
+                docker rm -f devsecops-app || true
+                
+                # 3. Run the new container with the secret
+                docker run -d --name devsecops-app -p 3000:3000 -e APP_PASSWORD=$DB_PASSWORD devsecops-app
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            echo "Cleaning up workspace..."
-            cleanWs()
-        }
-        success {
-            echo "Deployment successful! Application is running on port 3000."
-        }
-        failure {
-            echo "Pipeline failed. Check the console output for errors."
         }
     }
 }
