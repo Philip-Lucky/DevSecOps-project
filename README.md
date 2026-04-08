@@ -31,11 +31,14 @@ A complete Secure CI/CD pipeline built on AWS EC2 that integrates security at ev
 vault server -dev -dev-root-token-id="root" &
 export VAULT_ADDR='http://127.0.0.1:8200'
 vault kv put secret/devsecops-app password=" "
+```
 
 ### 2. Configure Jenkins Permissions
 Ensure Jenkins can run Docker commands:
+```bash
 sudo usermod -aG docker jenkins
 sudo systemctl restart jenkins
+```
 
 ### 3. Jenkins Pipeline Configuration
 Create a Pipeline job in Jenkins.
